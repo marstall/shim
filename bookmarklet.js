@@ -1,1 +1,0 @@
-javascript:url=document.location.href;url.match(/\?/) ? url+="&" : url+="?"; url+="s:33t";document.location.href=url
