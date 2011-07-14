@@ -1,0 +1,46 @@
+<script src='http://<%=host%>/socket.io/socket.io.js'></script> 
+<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js'></script> 
+<body>
+<div>
+<br>
+<input id='msg' type='text' value='http://www.filamentgroup.com/clients/boston-globe/3-8-2011/tmpl-home-leads.html'><input type='submit' id='submit' value='send'>
+<span style='width:100%;padding:1em;background-color:#ffc;color:green;font-family:monospace' id='log'><br></span>
+<br>
+</div>
+<iframe id='iframe' src="" width="100%" height="2000">
+  <p>Your browser does not support iframes.</p>
+</iframe>
+<br>
+<br>
+<script> 
+	socket = null;
+	init = function() 
+	{ 
+		try 
+		{ 
+			var host = '<%=host%>';
+			host = host.substring(0,host.indexOf(':')); 
+			socket = new io.Socket(host,{port:8000,transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
+			socket.connect(); 
+			socket.on('message', function(data){
+					if (data.substring(0,4)=='http') $("iframe").attr('src',data);
+					else $("#log").html(data+"<br>");
+				});
+			socket.on('disconnect', function(){});
+		} 
+		catch (err) 
+		{ 
+			alert(err); 
+		} 
+	}; 
+	$(document).ready(function() { 
+		init(); 
+	}); 
+
+$('#submit').click(function(e){
+	msg = $("#msg").val();
+	socket.send(msg);
+	
+})
+</script>
+</body>

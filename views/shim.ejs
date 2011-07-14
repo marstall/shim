@@ -1,0 +1,152 @@
+<script src='http://<%=host%>/socket.io/socket.io.js'></script> 
+<script src='http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js'></script> 
+<script> 
+insp_obj = function(obj,count)
+{
+	if (!count) count=0
+	count=count+1;
+	_log(count)
+	if (count>10)
+	{
+		_log('too deep!')
+	}
+	
+	for (prop in obj)
+	{
+		if (typeof(obj[prop])=='function')
+		{
+			_log(prop)
+		}
+		else
+		{
+			o =obj[prop]
+			_log(prop+":"+o)
+			
+			//if (o) insp_obj(o,count)
+		}
+	}
+} 
+	jQuery.noConflict();
+	var message_sent=null;
+	connected=false;
+	var socket = null;
+	setInterval(function(){
+		change_urls();
+//		_log("connected:"+connected)
+		if (socket) _log("socket.connected:"+socket.connected)
+//		insp_obj(socket)
+		if (!connected||!socket||!socket.connected) 
+		{
+			set_status("detected disconnect, reconnecting");
+			connect();
+			set_status("reconnected after disconnect");
+//			if (!message_sent)
+	//		{
+		//		message_sent=true;
+			//	set_status("message not sent after reconnect, sending");
+		//	}
+			connected=true;
+		}
+	},5000)
+	
+	original_title=''  
+	set_status = function(status)
+	{
+		document.title=status
+		if (typeof(console)!='undefined')
+		{
+			_log(status)
+		}
+//		$("#log").append("<div><span style='color:gray'>"+new Date().getTime()/1000+"</span>&nbsp;"+status+"</div>")
+//		alert(status);
+	}
+
+	send_url = function(url)
+	{
+		message_sent = url
+		if (message_sent)
+		{
+			socket.send(message_sent);
+			_log("sent_url: "+url)
+			connected=true;
+		}
+	}
+
+	_log = function(s)
+	{
+		try
+		{
+			if (console) console.log(s);
+		}
+		catch (err)
+		{}
+	}
+	
+	connect = function()
+	{
+		var host = '<%=host%>';
+		host = host.substring(0,host.indexOf(':')); 
+		socket = new io.Socket(host,{port:80,transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
+		//socket = new io.Socket(host,{port:80}); 
+		set_status("created socket");
+		socket.connect(); 
+		socket.on('message', function(data){
+			connected=true;
+			data = data.toString()
+			_log('recd msg '+data);
+			if (data.substring(0,4)=='http') 
+			{
+				if (data.toString()!=top.location.href) 
+				{
+					_log("received url "+data);
+					top.location.href=data.toString();
+				}
+			}
+		});
+		connected=true
+	}
+	
+	change_urls = function()
+	{
+		num_to_change = jQuery("a[href]").size();
+		_log("changing "+num_to_change+" urls.");
+		jQuery("a[href]").each(function()
+		   { 
+					if (!this.href.match(/s\:33t$/)) 
+					{
+						parts = this.href.split("#")
+						href = parts[0]
+//						_log(href)
+						if (!href.match(/\?/)) href = href+"?"
+						else href+="&"
+						href+='s:33t'
+						this.href=href
+// 				  _log(this.href)
+					}
+		   });
+	}
+	
+	init = function() 
+	{ 
+		connected=false;
+		original_title=document.title
+		change_urls();
+		setInterval(change_urls,1000);
+		try 
+		{ 
+			connect();
+			set_status("sent connect");
+			send_url(top.location.href);
+
+			socket.on('disconnect', function(){connected=false;connect(); set_status("recvd disconnect, attempting reconnect");});
+		} 
+		catch (err) 
+		{ 
+		//	alert(err); 
+		} 
+	}; 
+	change_urls();
+	jQuery(document).ready(function() { 
+		init(); 
+	}); 
+</script>
