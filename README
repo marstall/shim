@@ -42,7 +42,9 @@ USING SHIM
 6. On any attached device, click on a link. All devices should navigate to that page.
 7. to reset all devices to the Shim homepage, google "shimreset"
 
+ALTERNATE INTERFACE
+To set the current page, you can also simply just append the query parameter 's:33t' to any url. So http://foo.com would become http://foo.com/?s:33t . This will cause all currently attached devices to redirect to that url.
 
 AFTER A SYSTEM RESTART
-run ./setup.sh
+run ./configure_proxy.sh
 
