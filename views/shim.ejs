@@ -61,10 +61,16 @@ insp_obj = function(obj,count)
 //		alert(status);
 	}
 
-	send_url = function(url)
+	send_url = function(url,append_set_string)
 	{
 		try
 		{
+			if (append_set_string && url) 
+			{
+				if (url.match(/\?/)) url+='&'
+				else url+='?'
+				url+='s:33t'
+			}
 			message_sent = url
 			if (message_sent)
 			{

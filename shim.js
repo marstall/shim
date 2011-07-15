@@ -9,10 +9,10 @@ url_module = require('url')
 var set_string = 's:33t'
 var set_regexp = /s\:33t$/
 var attach_command_string = /attach/
-var reset_command_string = /syncreset/
+var reset_command_string = /shimreset/
 
 
-var home_url = "http://shim.my/shim"
+var home_url = "http://foo.com/shim"
 var homepage_urls = []
 /*
 	{
@@ -219,11 +219,12 @@ function handle_reset(req,res)
 function homepage(req,res)	
 {
 	Path=home_url
-	s=generate_shim(req)
+	s ="<meta name='viewport' content='user-scalable=no, width=device-width,initial-scale=1, minimum-scale=1, maximum-scale=1'/>"
+	s+=generate_shim(req)
 	s+="<div style='font-family:Courier;color:red'> \
 	<h1 style=\"border-bottom:4px solid red\"> Shim </h1> \
 	<div style='color:black'> \
-	<form onsubmit=\"send_url(jQuery('#url').val());return false;\"> \
+	<form onsubmit=\"send_url(jQuery('#url').val(),true);return false;\"> \
 	Enter url:  <input id='url' type='text' width=120px/> <input type='submit' value='Set'/> </form> \
 	</div>"
 	
@@ -276,7 +277,7 @@ server = http.createServer(function (req, res)
 	if (reset_command(url))
 	{
 		handle_reset(req,res);
-		console.log("syncreset received.")
+		console.log("shimreset received.")
 	}
 	if (attach_command(url))
 	{
