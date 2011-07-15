@@ -1,6 +1,6 @@
 var http = require('http')
 httpProxy = require('http-proxy');
-io = require('socket.io')
+socket_io = require('socket.io')
 ejs = require('ejs')
 fs = require('fs')
 url_module = require('url')
@@ -12,9 +12,9 @@ var attach_command_string = /attach/
 var reset_command_string = /syncreset/
 
 
-var home_url = "http://bostonglobe.com/sinker"
-
-var homepage_urls = [
+var home_url = "http://shim.my/shim"
+var homepage_urls = []
+/*
 	{
 		"label":'boston globe qa',
 		"url":'http://qaedit.bostonglobe.com/BostonGlobe'
@@ -24,7 +24,7 @@ var homepage_urls = [
 		"url":'http://10.100.50.47/Boston-Globe/tmpl/'
 	},
 ]
-
+*/
 insp_obj = function(obj,count)
 {
 	if (!count) count=0
@@ -220,8 +220,15 @@ function homepage(req,res)
 {
 	Path=home_url
 	s=generate_shim(req)
-	s+="<div style='font-family:Courier;color:red'>"
-	s+='<h1 style="border-bottom:4px solid red"> Sinker </h1>'
+	s+="<div style='font-family:Courier;color:red'> \
+	<h1 style=\"border-bottom:4px solid red\"> Shim </h1> \
+	<div style='color:black'> \
+	<form onsubmit=\"send_url(jQuery('#url').val());return false;\"> \
+	Enter url:  <input id='url' type='text' width=120px/> <input type='submit' value='Set'/> </form> \
+	</div>"
+	
+	if (homepage_urls.length>0)
+	{
 	console.log(">> "+homepage_urls[0].url)
 	for (i=0;i<homepage_urls.length;++i)
 	{
@@ -230,6 +237,9 @@ function homepage(req,res)
 		s+="<p><a href='"+x.url+"?"+set_string+"'>"+x.label+"</a></p>"
 	}
 	s+="</div>"
+	}
+	res.setHeader("Content-Length", s.length);
+	res.setHeader("Content-Type", "text/html");
 	res.write(s);
 	res.end();
 	return;
@@ -250,9 +260,8 @@ function handle_attach(req,res)
 
 server = http.createServer(function (req, res) 
 {
-	console.log("server created.")
 //  for (property in req.headers) console.log(property + ":" +req.headers[property]+"")
-	if (req.url=='/sinker')
+	if (req.url=='/shim')
 	{
 		console.log("showing homepage with shim.")
 		homepage(req,res)
@@ -290,9 +299,9 @@ server = http.createServer(function (req, res)
 	}
 	else
 	{
-		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
- 	  	var proxy = new httpProxy.HttpProxy();
-		proxy.proxyRequest(req, res, 80, req.headers['host']);
+//		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
+  	var proxy = new httpProxy.HttpProxy();
+		proxy.proxyRequest(req, res, {host:req.headers['host'],port:80});
 	}
 })
 
@@ -356,17 +365,16 @@ shim_proxy = function(request,response)
 console.log("server:"+server)
 
 
-var listener = io.listen(server,{'timeout':600000});
+var io = socket_io.listen(server);
 
 
 // socket.io 
 console.log('setting up listener ...') ;
 
-listener.on('connection', function(client){ 
+io.sockets.on('connection', function(client){ 
 	if (client.request) 
 	{
 		console.log('connect from client.') 
-		//listener.broadcast(Path);jm
 	}
 	client.on('message', function(s) { 
 		if (s)
@@ -392,7 +400,7 @@ broadcast = function(msg,sending_client)
 	{
 		if (msg) 
 		{
-			listener.broadcast(msg,sending_client) // don't broadcast to sending client
+			io.sockets.send(msg,sending_client) // don't broadcast to sending client
 			console.log ("broadcasting "+msg)
 			last_broadcast=new Date().getTime();
 		}
@@ -406,11 +414,10 @@ broadcast = function(msg,sending_client)
 log_connections = function()
 {
 	s= "[ "
-	for (client in listener.clients)
+	for (client in io.clients)
 	{
 		if (!clients_attached_at[client]) clients_attached_at[client]=new Date().getTime();
-		if (listener.clients[client]) s+=client+" ("+client_attached_for(client) + ") "
-//		if (msg&&listener.clients[client]) listener.clients[client].send(msg)
+		if (io.clients[client]) s+=client+" ("+client_attached_for(client) + ") "
 	}
 	s+="] "
 	s+=Path

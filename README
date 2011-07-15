@@ -1,0 +1,20 @@
+REQUIREMENTS
+* Shim must be installed on a 10.6+ Mac with both wired *and* wireless network interfaces (for example, a newer stock MacBook). The wired interface will be used to communicate with the internet; the wireless interface will be used to serve pages to devices.
+
+INSTALLATION
+1 download and install the OS X NodeJS package: http://sites.google.com/site/nodejsmacosx
+2 git clone git@github.com:marstall/shim.git
+3 cd shim
+4 ./setup.sh
+5 ./setup_transparent_proxy.sh
+
+RUNNING
+cd shim
+node shim.js
+
+USING
+
+
+
+AFTER A SYSTEM RESTART
+./setup.transparent_proxy.sh

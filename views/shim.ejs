@@ -63,12 +63,19 @@ insp_obj = function(obj,count)
 
 	send_url = function(url)
 	{
-		message_sent = url
-		if (message_sent)
+		try
 		{
-			socket.send(message_sent);
-			_log("sent_url: "+url)
-			connected=true;
+			message_sent = url
+			if (message_sent)
+			{
+				socket.send(message_sent);
+				_log("sent_url: "+url)
+				connected=true;
+			}
+		}
+		catch (err)
+		{
+			//alert(err)
 		}
 	}
 
@@ -86,10 +93,10 @@ insp_obj = function(obj,count)
 	{
 		var host = '<%=host%>';
 		host = host.substring(0,host.indexOf(':')); 
-		socket = new io.Socket(host,{port:80,transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
+		socket = io.connect(host,{port:80,transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
 		//socket = new io.Socket(host,{port:80}); 
 		set_status("created socket");
-		socket.connect(); 
+//		socket.connect(); 
 		socket.on('message', function(data){
 			connected=true;
 			data = data.toString()
