@@ -4,7 +4,6 @@ io = require('socket.io')
 ejs = require('ejs')
 fs = require('fs')
 url_module = require('url')
-var nodeio = require('node.io');
 //var options = {timeout: 10};
 
 var set_string = 's:33t'
@@ -251,6 +250,7 @@ function handle_attach(req,res)
 
 server = http.createServer(function (req, res) 
 {
+	console.log("server created.")
 //  for (property in req.headers) console.log(property + ":" +req.headers[property]+"")
 	if (req.url=='/sinker')
 	{
@@ -262,7 +262,7 @@ server = http.createServer(function (req, res)
 	//if ((is_top_html_request || valid_paths[_path])&&!req.headers['referer']&&!excluded(req))
 	url = req.url
 //	insp_obj(query);
-//	console.log("request for "+_path)
+	console.log("request for "+_path)
 //	console.log("===="+url+"'"+url.match(attach_command))
 	if (reset_command(url))
 	{
@@ -290,8 +290,8 @@ server = http.createServer(function (req, res)
 	}
 	else
 	{
-//		console.log (" %%%%%%%%%%%%%% no shim"+req.url)
-	  var proxy = new httpProxy.HttpProxy();
+		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
+ 	  	var proxy = new httpProxy.HttpProxy();
 		proxy.proxyRequest(req, res, 80, req.headers['host']);
 	}
 })
