@@ -283,6 +283,7 @@ server = http.createServer(function (req, res)
 	{
 		handle_attach(req,res);
 		console.log("device attaching.")
+		return;
 	}
 	
 	if (is_settable(req))//&&ready_for_text_html(req,_path)) 

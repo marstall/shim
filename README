@@ -1,5 +1,7 @@
 ABOUT SHIM
-Shim is a project developed by the Boston Globe as a way to see how its web sites render on a variety of gadgets & browsers. It works by tweaking Wifi to enable the easy synchronization of browsing sessions across several devices, with no client configuration needed.
+Shim is a node.js app that enables simultaneous, synced web surfing across a variety of devices and browsers.
+
+Shim was developed by the Boston Globe as a timesaving way to see how its web sites render on a variety of gadgets & browsers. It works by tweaking Wifi to enable the easy synchronization of browsing sessions across several devices, with no client configuration needed.
 
 This makes cross-browser and cross-device testing much easier. With one click, it's possible to see a page rendered on devices of varying screen size, input technology, etc.
 
@@ -21,6 +23,10 @@ INSTALLING SHIM
 2 git clone git@github.com:marstall/shim.git
 3 cd shim
 4 sudo ./setup.sh
+5 Under Control Panel/Sharing, turn on Internet Sharing
+5 restart your Mac
+6 cd shim
+7 sudo ./configure_proxy.sh 
 
 
 RUNNING SHIM

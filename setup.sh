@@ -1,22 +1,15 @@
-#echo "installing npm ..."
-#sudo curl http://npmjs.org/install.sh | sudo sh
+echo "installing npm ..."
+sudo curl http://npmjs.org/install.sh | sudo sh
 
-# echo "installing node.js packages ..."
-#sudo npm install socket.io
-#sudo npm install http-proxy
-#sudo npm install ejs
+echo "installing node.js packages ..."
+sudo npm install socket.io@0.7.7
+sudo npm install http-proxy@0.5.11
+sudo npm install ejs@0.4.3
 
-echo "setting network interface privileges ..."
-sudo chgrp admin /dev/bpf*
-sudo chmod g+rw /dev/bpf*
+echo "copying new.inet.ip flags to /etc/sysctl.conf to allow transparent-proxying ..."
+sudo touch /etc/sysctl.conf
+sudo cp /etc/sysctl.conf __sysctl.conf
+sudo cat _sysctl.conf>>__sysctl.conf
+sudo cp __sysctl.conf /etc/sysctl.conf
 
-echo "Adding firewall rule to forward all port-80 WiFi passthrough traffic to localhost:3128 ..."
-sudo ipfw delete 02000 
-sudo ipfw -q add 02000 fwd 127.0.0.1,3128 tcp from any to any dst-port 80 in recv en1
-
-echo "Setting new.inet.ip flags to allow transparent-proxying ..."
-sudo sysctl -w net.inet.ip.forwarding=1
-sudo sysctl -w net.inet.ip.fw.enable=1
-sudo sysctl -w net.inet.ip.fw.verbose=1
-sudo sysctl -w net.inet.ip.scopedroute=0
-
+./configure_proxy.sh
