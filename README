@@ -23,7 +23,7 @@ INSTALLING SHIM
 2 git clone git@github.com:marstall/shim.git
 3 cd shim
 4 sudo ./setup.sh
-5 Under Control Panel/Sharing, turn on Internet Sharing
+5 Under Control Panel/Sharing, turn on Internet Sharing (select "Share your connection from [Ethernet] To Computers using [Airport]")
 5 restart your Mac
 6 cd shim
 7 sudo ./configure_proxy.sh 

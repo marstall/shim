@@ -303,7 +303,7 @@ server = http.createServer(function (req, res)
 	{
 //		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
   	var proxy = new httpProxy.HttpProxy();
-		proxy.proxyRequest(req, res, {host:req.headers['host'],port:80});
+		if (res.connection) proxy.proxyRequest(req, res, {host:req.headers['host'],port:80});
 	}
 })
 
@@ -311,9 +311,9 @@ server.listen(3128);
 
 shim_proxy = function(request,response)
 {
-	shim = "<meta name='viewport' content='user-scalable=no, width=device-width,initial-scale=1, minimum-scale=1, maximum-scale=1'/>"
-	shim+="<script>globe.OAS=null</script>"
-	shim += generate_shim(request)     
+//	shim = "<meta name='viewport' content='user-scalable=no, width=device-width,initial-scale=1, minimum-scale=1, maximum-scale=1'/>"
+//	shim+="<script>globe.OAS=null</script>"
+	shim = generate_shim(request)     
 	var proxy = http.createClient(80, request.headers['host'])
 	request_headers = request.headers
 	request_headers['Accept-Encoding']=''
@@ -324,17 +324,17 @@ shim_proxy = function(request,response)
 	proxy_request.addListener('response', function (proxy_response) 
 	{ 
 		console.log('initial response to: '+_path)
-		shim_added=false;	
+//		shim_added=false;	
 		var declared_content_length = 0
 		var actual_content_length = 0
 		proxy_response.addListener('data', function(chunk) 
 		{
-			if (!shim_added)
+/*			if (!shim_added)
 			{
 				console.log("actually adding shim with size "+shim.length)
 				chunk=shim+chunk;
 				shim_added=true;
-			}
+			}*/
 			actual_content_length+=chunk.length
 //			console.log("SHIM PAGE chunk: "+chunk.length+":"+actual_content_length+"/"+declared_content_length)
 			response.write(chunk, 'binary');
@@ -343,6 +343,8 @@ shim_proxy = function(request,response)
 		proxy_response.addListener('end', function() 
 		{
 			console.log("SHIM PAGE response end")
+			console.log("actually adding shim with size "+shim.length)
+			response.write(shim, 'binary');
 			response.end();
 		});
 //		console.log("SHIM PAGE adding headers")
