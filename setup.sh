@@ -5,6 +5,8 @@ echo "installing node.js packages ..."
 sudo npm install socket.io@0.7.7
 sudo npm install http-proxy@0.5.11
 sudo npm install ejs@0.4.3
+sudo npm install ejs@0.4.3
+sudo npm install -g supervisor
 
 echo "copying new.inet.ip flags to /etc/sysctl.conf to allow transparent-proxying ..."
 sudo touch /etc/sysctl.conf

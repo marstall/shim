@@ -6,11 +6,24 @@ fs = require('fs')
 url_module = require('url')
 //var options = {timeout: 10};
 
-var set_string = 's:33t'
-var set_regexp = /s\:33t$/
+var set_string = 's:33t=1'
+var set_regexp = /s\:33t(\=1)?$/
 var attach_command_string = /attach/
 var reset_command_string = /shimreset/
 
+var is_redirect = function(req)
+{
+	return (req.statusCode>=300 && req.statusCode<=400) ? true : false
+}
+
+var append_set_string = function(s)
+{
+	if (s==null) return s;
+	if (s.match(set_regexp)) return s
+	if (s.match(/\?/)) s+="&"
+	else s+="?"
+	return s+set_string
+}
 
 var home_url = "http://foo.com/shim"
 var homepage_urls = []
@@ -39,12 +52,17 @@ insp_obj = function(obj,count)
 	{
 		if (typeof(obj[prop])=='function')
 		{
-			console.log(prop)
+			console.log(prop+"()")
 		}
 		else
 		{
 			o =obj[prop]
-			console.log(prop+":"+o)
+			try
+			{
+				console.log(prop+":"+o)
+			}
+			catch(e)
+			{}
 			
 			//if (o) insp_obj(o,count)
 		}
@@ -172,12 +190,10 @@ is_settable=function(req)
 		url = req.url
 		if (url.match(/json/)) 
 		{
-	//		console.log("url didn't match /s\:33t$/ => "+url)
 			return false;
 		}
-	if (!url.match(/s\:33t$/)) 
+	if (!url.match(set_regexp)) 
 	{
-//		console.log("url didn't match /s\:33t$/ => "+url)
 		return false;
 	}
 	if (url.match(/=http/)) 
@@ -225,8 +241,10 @@ function homepage(req,res)
 	<h1 style=\"border-bottom:4px solid red\"> Shim </h1> \
 	<div style='color:black'> \
 	<form onsubmit=\"send_url(jQuery('#url').val(),true);return false;\"> \
-	Enter url:  <input id='url' type='text' width=120px/> <input type='submit' value='Set'/> </form> \
-	</div>"
+	Enter url:  <input id='url' type='text' value='http://' width=120px/> <input type='submit' value='Set'/> </form> \
+	</div> "
+
+	s+='<a href=\'javascript:url=document.location.href;url.match(/\\?/)?url+="&":url+="?";url+="'+set_string+'";document.location.href=url\'>sync bookmarklet</a> (drag to toolbar)'
 	
 	if (homepage_urls.length>0)
 	{
@@ -272,7 +290,7 @@ server = http.createServer(function (req, res)
 	//if ((is_top_html_request || valid_paths[_path])&&!req.headers['referer']&&!excluded(req))
 	url = req.url
 //	insp_obj(query);
-	console.log("request for "+_path)
+//	console.log("request for "+_path)
 //	console.log("===="+url+"'"+url.match(attach_command))
 	if (reset_command(url))
 	{
@@ -301,30 +319,73 @@ server = http.createServer(function (req, res)
 	}
 	else
 	{
-//		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
+		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
   	var proxy = new httpProxy.HttpProxy();
-		if (res.connection) proxy.proxyRequest(req, res, {host:req.headers['host'],port:80});
+		if (res.statusCode>=300 && res.statusCode<400)
+		{
+ 			console.log("+++++++++++++ statusCode:"+res.statusCode)
+		}
+		if (res.connection) 
+		{
+			proxy.proxyRequest(req, res, {host:req.headers['host'],port:80});
+			proxy.close();
+		}
 	}
 })
 
 server.listen(3128);
+
+cookies = {}
+
+function handle_cookies(host,req)
+{
+	// add any cookies in the request to the collection of cookies for this domain, avoiding dupes.
+	// then set the value of 'cookies:' to hold all the cookies in the collection.
+	new_cookies = req.headers.cookie||""
+	console.log("+++ new incoming cookies: " + new_cookies)
+	pairs = new_cookies.split(";")
+	existing_cookies = cookies[host]||{}
+	for (i in pairs)
+	{
+		pair = pairs[i]
+		x = pair.split("=")
+		if (x.length>1)
+		{
+			name = x[0].trim();
+			value = x[1].trim();
+			if (value.length>0) existing_cookies[name]=value
+			console.log("new cookie:"+name+":"+value)
+		}
+	}
+	combined_cookie_string = ""
+	for (name in existing_cookies)
+	{
+		value = existing_cookies[name]
+		combined_cookie_string+=(name+"="+value+";")
+	}
+	req.headers.cookie=combined_cookie_string
+	cookies[host]=existing_cookies
+	console.log("+++ combined_cookie_string for "+host+": " + combined_cookie_string)
+}
 
 shim_proxy = function(request,response)
 {
 //	shim = "<meta name='viewport' content='user-scalable=no, width=device-width,initial-scale=1, minimum-scale=1, maximum-scale=1'/>"
 //	shim+="<script>globe.OAS=null</script>"
 	shim = generate_shim(request)     
-	var proxy = http.createClient(80, request.headers['host'])
+	host = request.headers['host']
+	var proxy = http.createClient(80, host)
 	request_headers = request.headers
 	request_headers['Accept-Encoding']=''
 	request_headers['accept-encoding']=''
-
+	
+	handle_cookies(host,request)
 	_path = "http://"+request.headers['host']+request.url;
 	var proxy_request = proxy.request(request.method, request.url, request_headers);
 	proxy_request.addListener('response', function (proxy_response) 
 	{ 
 		console.log('initial response to: '+_path)
-//		shim_added=false;	
+		shim_added=false;	
 		var declared_content_length = 0
 		var actual_content_length = 0
 		proxy_response.addListener('data', function(chunk) 
@@ -334,7 +395,8 @@ shim_proxy = function(request,response)
 				console.log("actually adding shim with size "+shim.length)
 				chunk=shim+chunk;
 				shim_added=true;
-			}*/
+			}
+*/
 			actual_content_length+=chunk.length
 //			console.log("SHIM PAGE chunk: "+chunk.length+":"+actual_content_length+"/"+declared_content_length)
 			response.write(chunk, 'binary');
@@ -350,8 +412,13 @@ shim_proxy = function(request,response)
 //		console.log("SHIM PAGE adding headers")
 		headers = proxy_response.headers
 		declared_content_length = headers['content-length']=(parseInt(headers['content-length'])+shim.length); 
+		if (is_redirect(proxy_response))
+		{
+			console.log("+++ detected redirect, appending set string to location header value")
+			headers["location"]=append_set_string(headers["location"])
+		}
 		response.writeHead(proxy_response.statusCode, headers);
-	}); //addData
+}); //addData
 
 
 
@@ -371,16 +438,18 @@ console.log("server:"+server)
 
 var io = socket_io.listen(server);
 
+sockets_hash={}
 
 // socket.io 
 console.log('setting up listener ...') ;
 
-io.sockets.on('connection', function(client){ 
-	if (client.request) 
+io.sockets.on('connection', function(socket){ 
+//		sockets_hash[socket.id]=socket
+	if (socket.request) 
 	{
 		console.log('connect from client.') 
 	}
-	client.on('message', function(s) { 
+	socket.on('message', function(s) { 
 		if (s)
 		{
 			console.log('!!!!!!!!!!!!!!! received message, broadcasting:' + s);
@@ -389,8 +458,9 @@ io.sockets.on('connection', function(client){
 	}
 		
 	}) 
-	client.on('disconnect', function(l)
+	socket.on('disconnect', function(socket)
 	{ 
+//		sockets_hash[socket.id]=null;
 		console.log('disconnect'); 
 	}) 
 });
@@ -415,15 +485,31 @@ broadcast = function(msg,sending_client)
 	}
 }
 
-log_connections = function()
+_log_connections = function()
 {
 	s= "[ "
+	insp_obj(io.sockets)
 	for (client in io.clients)
 	{
 		if (!clients_attached_at[client]) clients_attached_at[client]=new Date().getTime();
 		if (io.clients[client]) s+=client+" ("+client_attached_for(client) + ") "
 	}
 	s+="] "
+	s=Path
+	console.log(s)
+}
+
+log_connections = function()
+{
+	return;
+	s= "[ "
+	for (socket in sockets_hash)
+	{
+		insp_obj(sockets_hash[socket])
+		if (sockets_hash[socket]) s+=socket+" "
+	}
+	s+="] "
 	s+=Path
 	console.log(s)
 }
+

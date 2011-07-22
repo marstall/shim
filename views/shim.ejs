@@ -1,6 +1,11 @@
 <script src='http://<%=host%>/socket.io/socket.io.js'></script> 
 <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js'></script> 
 <script> 
+
+shim = function(){
+var set_string = 's:33t=1'
+var set_regexp = /s\:33t(\=1)?$/
+var count=0
 insp_obj = function(obj,count)
 {
 	if (!count) count=0
@@ -31,15 +36,16 @@ insp_obj = function(obj,count)
 	connected=false;
 	var socket = null;
 	setInterval(function(){
+		count+=1
 		change_urls();
 //		_log("connected:"+connected)
 		if (socket) _log("socket.connected:"+socket.connected)
 //		insp_obj(socket)
 		if (!connected||!socket||!socket.connected) 
 		{
-			set_status("detected disconnect, reconnecting");
+			set_status(count+" detected disconnect, reconnecting");
 			connect();
-			set_status("reconnected after disconnect");
+			set_status(count+" reconnect: "+socket+":"+socket.connected);
 //			if (!message_sent)
 	//		{
 		//		message_sent=true;
@@ -69,7 +75,7 @@ insp_obj = function(obj,count)
 			{
 				if (url.match(/\?/)) url+='&'
 				else url+='?'
-				url+='s:33t'
+				url+=set_string
 			}
 			message_sent = url
 			if (message_sent)
@@ -99,7 +105,7 @@ insp_obj = function(obj,count)
 	{
 		var host = '<%=host%>';
 		host = host.substring(0,host.indexOf(':')); 
-		socket = io.connect(host,{port:80,transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
+		socket = io.connect({'try multiple transports':true}); //host,{transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
 		//socket = new io.Socket(host,{port:80}); 
 		set_status("created socket");
 //		socket.connect(); 
@@ -111,7 +117,7 @@ insp_obj = function(obj,count)
 			{
 				if (data.toString()!=top.location.href) 
 				{
-					_log("received url "+data);
+					_log(Math.floor(Math.random()*10)+" rcv "+data);
 					top.location.href=data.toString();
 				}
 			}
@@ -125,17 +131,15 @@ insp_obj = function(obj,count)
 		_log("changing "+num_to_change+" urls.");
 		jQuery("a[href]").each(function()
 		   { 
-					if (!this.href.match(/s\:33t$/)) 
-					{
-						parts = this.href.split("#")
-						href = parts[0]
-//						_log(href)
-						if (!href.match(/\?/)) href = href+"?"
-						else href+="&"
-						href+='s:33t'
-						this.href=href
-// 				  _log(this.href)
-					}
+			if (!this.href.match(set_regexp)&&!this.href.match('^javascript')&&!this.href.match(/\#/)) 
+			{
+				parts = this.href.split("#")
+				href = parts[0]
+				if (!href.match(/\?/)) href = href+"?"
+				else href+="&"
+				href+=set_string
+				this.href=href
+			}
 		   });
 	}
 	
@@ -150,6 +154,7 @@ insp_obj = function(obj,count)
 			connect();
 			set_status("sent connect");
 			send_url(top.location.href);
+			setTimeout(send_url(top.location.href),2000)
 
 			socket.on('disconnect', function(){connected=false;connect(); set_status("recvd disconnect, attempting reconnect");});
 		} 
@@ -159,7 +164,10 @@ insp_obj = function(obj,count)
 		} 
 	}; 
 	change_urls();
+}();
+
 	jQuery(document).ready(function() { 
-		init(); 
+		shim.init(); 
 	}); 
+
 </script>
