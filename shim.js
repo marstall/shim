@@ -42,7 +42,7 @@ insp_obj = function(obj,count)
 {
 	if (!count) count=0
 	count=count+1;
-	console.log(count)
+//	console.log(count)
 	if (count>10)
 	{
 		console.log('too deep!')
@@ -52,7 +52,7 @@ insp_obj = function(obj,count)
 	{
 		if (typeof(obj[prop])=='function')
 		{
-			console.log(prop+"()")
+		//	console.log(prop+"()")
 		}
 		else
 		{
@@ -81,7 +81,8 @@ client_attached_for = function(client) {
 
 setInterval(function()
 {
-	log_connections()
+	broadcast(Path);
+	log_connections();
 	},5000)
 
 generate_shim = function(req)
@@ -244,7 +245,7 @@ function homepage(req,res)
 	Enter url:  <input id='url' type='text' value='http://' width=120px/> <input type='submit' value='Set'/> </form> \
 	</div> "
 
-	s+='<a href=\'javascript:url=document.location.href;url.match(/\\?/)?url+="&":url+="?";url+="'+set_string+'";document.location.href=url\'>sync bookmarklet</a> (drag to toolbar)'
+	s+='<a href=\'javascript:url=document.location.href;url.match(/\\?/)?url+="&":url+="?";url+="'+set_string+'";document.location.href=url\'>shim bookmarklet</a> (drag to toolbar)'
 	
 	if (homepage_urls.length>0)
 	{
@@ -276,6 +277,36 @@ function handle_attach(req,res)
 	res.end();
 	return;
 }
+
+load_config = function()
+{
+	config_text = fs.readFileSync('config.json','utf8')
+	if (!config_text || config_text.length==0)
+	{
+		console.log("CONFIG: no config file.")
+		return;
+	}
+	json = JSON.parse(config_text)
+	CONFIG = json.config
+	console.log("SLIDESHOW SETTINGS")
+	insp_obj(CONFIG.slideshow)
+	console.log("EXCLUDED COOKIES")
+	insp_obj(CONFIG.excluded_cookies)
+}
+
+initialize_slideshow = function() {
+	if (!CONFIG.slideshow) return
+	setInterval(function(){
+		console.log("slideshow set to "+slideshow_index+"/"+CONFIG.slideshow.paths[slideshow_index])
+		Path = CONFIG.slideshow.path_base+"/"+CONFIG.slideshow.paths[slideshow_index]+"?"+set_string
+		broadcast(Path)
+		slideshow_index++;
+		if (slideshow_index>=CONFIG.slideshow.paths.length) slideshow_index=0;
+	},CONFIG.slideshow.interval)
+}
+// ------------------------------------------------------------------------------
+// MAIN FUNCTION
+// ------------------------------------------------------------------------------
 
 server = http.createServer(function (req, res) 
 {
@@ -319,7 +350,7 @@ server = http.createServer(function (req, res)
 	}
 	else
 	{
-		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
+//		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
   	var proxy = new httpProxy.HttpProxy();
 		if (res.statusCode>=300 && res.statusCode<400)
 		{
@@ -335,14 +366,25 @@ server = http.createServer(function (req, res)
 
 server.listen(3128);
 
-cookies = {}
+var cookies = {}
+var slideshow_index = 0;
+var broadcast_timeout = 5000;
+var last_broadcast=null
+var CONFIG = null;
+
+load_config();
+initialize_slideshow();
+// ------------------------------------------------------------------------------
+// END MAIN FUNCTION
+// ------------------------------------------------------------------------------
+
 
 function handle_cookies(host,req)
 {
 	// add any cookies in the request to the collection of cookies for this domain, avoiding dupes.
 	// then set the value of 'cookies:' to hold all the cookies in the collection.
 	new_cookies = req.headers.cookie||""
-	console.log("+++ new incoming cookies: " + new_cookies)
+//	console.log("+++ new incoming cookies: " + new_cookies)
 	pairs = new_cookies.split(";")
 	existing_cookies = cookies[host]||{}
 	for (i in pairs)
@@ -352,9 +394,10 @@ function handle_cookies(host,req)
 		if (x.length>1)
 		{
 			name = x[0].trim();
+			if (CONFIG.excluded_cookies[name]!=null) next;
 			value = x[1].trim();
 			if (value.length>0) existing_cookies[name]=value
-			console.log("new cookie:"+name+":"+value)
+//			console.log("new cookie:"+name+":"+value)
 		}
 	}
 	combined_cookie_string = ""
@@ -365,7 +408,7 @@ function handle_cookies(host,req)
 	}
 	req.headers.cookie=combined_cookie_string
 	cookies[host]=existing_cookies
-	console.log("+++ combined_cookie_string for "+host+": " + combined_cookie_string)
+	//console.log("+++ combined_cookie_string for "+host+": " + combined_cookie_string)
 }
 
 shim_proxy = function(request,response)
@@ -445,6 +488,7 @@ console.log('setting up listener ...') ;
 
 io.sockets.on('connection', function(socket){ 
 //		sockets_hash[socket.id]=socket
+	console.log('connect from client!') 
 	if (socket.request) 
 	{
 		console.log('connect from client.') 
@@ -465,16 +509,16 @@ io.sockets.on('connection', function(socket){
 	}) 
 });
 
-var broadcast_timeout = 5000;
-var last_broadcast=null
+
 broadcast = function(msg,sending_client)
 {
+	console.log ("attempting broadcast: "+msg)
 	log_connections();
 	if (!last_broadcast || new Date().getTime()-broadcast_timeout>last_broadcast)
 	{
 		if (msg) 
 		{
-			io.sockets.send(msg,sending_client) // don't broadcast to sending client
+			io.sockets.send(msg)//,sending_client) // don't broadcast to sending client
 			console.log ("broadcasting "+msg)
 			last_broadcast=new Date().getTime();
 		}
@@ -501,15 +545,15 @@ _log_connections = function()
 
 log_connections = function()
 {
-	return;
-	s= "[ "
+/*	s= "[ "
 	for (socket in sockets_hash)
 	{
 		insp_obj(sockets_hash[socket])
 		if (sockets_hash[socket]) s+=socket+" "
 	}
 	s+="] "
-	s+=Path
+*/
+	s=Path
 	console.log(s)
 }
 

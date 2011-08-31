@@ -2,172 +2,163 @@
 <script src='http://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js'></script> 
 <script> 
 
-shim = function(){
-var set_string = 's:33t=1'
-var set_regexp = /s\:33t(\=1)?$/
-var count=0
-insp_obj = function(obj,count)
+shim = function()
 {
-	if (!count) count=0
-	count=count+1;
-	_log(count)
-	if (count>10)
-	{
-		_log('too deep!')
-	}
-	
-	for (prop in obj)
-	{
-		if (typeof(obj[prop])=='function')
-		{
-			_log(prop)
-		}
-		else
-		{
-			o =obj[prop]
-			_log(prop+":"+o)
-			
-			//if (o) insp_obj(o,count)
-		}
-	}
-} 
-	jQuery.noConflict();
-	var message_sent=null;
+	set_string = 's:33t=1'
+	set_regexp = /s\:33t(\=1)?$/
+	count=0
+	message_sent=null;
 	connected=false;
-	var socket = null;
-	setInterval(function(){
-		count+=1
-		change_urls();
-//		_log("connected:"+connected)
-		if (socket) _log("socket.connected:"+socket.connected)
-//		insp_obj(socket)
-		if (!connected||!socket||!socket.connected) 
-		{
-			set_status(count+" detected disconnect, reconnecting");
-			connect();
-			set_status(count+" reconnect: "+socket+":"+socket.connected);
-//			if (!message_sent)
-	//		{
-		//		message_sent=true;
-			//	set_status("message not sent after reconnect, sending");
-		//	}
-			connected=true;
-		}
-	},5000)
-	
+	socket = null;
 	original_title=''  
-	set_status = function(status)
-	{
-		document.title=status
-		if (typeof(console)!='undefined')
-		{
-			_log(status)
-		}
-//		$("#log").append("<div><span style='color:gray'>"+new Date().getTime()/1000+"</span>&nbsp;"+status+"</div>")
-//		alert(status);
-	}
 
-	send_url = function(url,append_set_string)
-	{
-		try
-		{
-			if (append_set_string && url) 
-			{
-				if (url.match(/\?/)) url+='&'
-				else url+='?'
-				url+=set_string
-			}
-			message_sent = url
-			if (message_sent)
-			{
-				socket.send(message_sent);
-				_log("sent_url: "+url)
-				connected=true;
-			}
-		}
-		catch (err)
-		{
-			//alert(err)
-		}
-	}
+	jQuery.noConflict();
 
-	_log = function(s)
-	{
-		try
+
+	return {
+		
+		insp_obj:function(obj,count)
 		{
-			if (console) console.log(s);
-		}
-		catch (err)
-		{}
-	}
+			if (!count) count=0
+			count=count+1;
+			this.log(count)
+			if (count>10)
+			{
+				this.log('too deep!')
+			}
 	
-	connect = function()
-	{
-		var host = '<%=host%>';
-		host = host.substring(0,host.indexOf(':')); 
-		socket = io.connect({'try multiple transports':true}); //host,{transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
-		//socket = new io.Socket(host,{port:80}); 
-		set_status("created socket");
-//		socket.connect(); 
-		socket.on('message', function(data){
-			connected=true;
-			data = data.toString()
-			_log('recd msg '+data);
-			if (data.substring(0,4)=='http') 
+			for (prop in obj)
 			{
-				if (data.toString()!=top.location.href) 
+				if (typeof(obj[prop])=='function')
 				{
-					_log(Math.floor(Math.random()*10)+" rcv "+data);
-					top.location.href=data.toString();
+					this.log(prop)
+				}
+				else
+				{
+					o =obj[prop]
+					this.log(prop+":"+o)
+			
+					//if (o) insp_obj(o,count)
 				}
 			}
-		});
-		connected=true
-	}
-	
-	change_urls = function()
-	{
-		num_to_change = jQuery("a[href]").size();
-		_log("changing "+num_to_change+" urls.");
-		jQuery("a[href]").each(function()
-		   { 
-			if (!this.href.match(set_regexp)&&!this.href.match('^javascript')&&!this.href.match(/\#/)) 
-			{
-				parts = this.href.split("#")
-				href = parts[0]
-				if (!href.match(/\?/)) href = href+"?"
-				else href+="&"
-				href+=set_string
-				this.href=href
-			}
-		   });
-	}
-	
-	init = function() 
-	{ 
-		connected=false;
-		original_title=document.title
-		change_urls();
-		setInterval(change_urls,1000);
-		try 
-		{ 
-			connect();
-			set_status("sent connect");
-			send_url(top.location.href);
-			setTimeout(send_url(top.location.href),2000)
+		}, 
 
-			socket.on('disconnect', function(){connected=false;connect(); set_status("recvd disconnect, attempting reconnect");});
-		} 
-		catch (err) 
+		set_status:function(status)
+		{
+			document.title=status
+			if (typeof(console)!='undefined')
+			{
+				this.log(status)
+			}
+	//		$("#log").append("<div><span style='color:gray'>"+new Date().getTime()/1000+"</span>&nbsp;"+status+"</div>")
+	//		alert(status);
+		},
+
+		send_url:function(url,append_set_string)
+		{
+			try
+			{
+				if (append_set_string && url) 
+				{
+					if (url.match(/\?/)) url+='&'
+					else url+='?'
+					url+=this.set_string
+				}
+				message_sent = url
+				if (message_sent)
+				{
+					socket.send(message_sent);
+					this.log("sent_url: "+url)
+					connected=true;
+				}
+			}
+			catch (err)
+			{
+				//alert(err)
+			}
+		},
+
+		log:function(s)
+		{
+			try
+			{
+				if (console) console.log(s);
+			}
+			catch (err)
+			{}
+		},
+	
+		connect:function()
+		{
+			var host = '<%=host%>';
+			if (host.indexOf(":")>0) host = host.substring(0,host.indexOf(':')); 
+			socket = io.connect(host);//,{transports:['websocket', 'flashsocket', 'xhr-polling', 'htmlfile', 'xhr-multipart', 'jsonp-polling']}); 
+			//socket = new io.socket(host,{port:80}); 
+			this.set_status("created socket");
+		//	socket.connect(); 
+			that = this
+			socket.on('message', function(data){
+				connected=true;
+				data = data.toString()
+				that.log('recd msg '+data);
+				if (data.substring(0,4)=='http') 
+				{
+					if (data.toString()!=top.location.href) 
+					{
+						that.log(Math.floor(Math.random()*10)+" rcv "+data);
+						top.location.href=data.toString();
+					}
+				}
+			});
+			connected=true
+		},
+	
+		change_urls:function(context)
+		{
+			if (!context) context=this
+			num_to_change = jQuery("a[href]").size();
+			context.log("changing "+num_to_change+" urls.");
+			context.insp_obj(context)
+			jQuery("a[href]").each(function()
+			   { 
+					if (!this.href.match(set_regexp)&&!this.href.match('^javascript')&&!this.href.match(/\#/)) 
+					{
+						context.log("changing " + this.href);
+						parts = this.href.split("#")
+						href = parts[0]
+						if (!href.match(/\?/)) href = href+"?"
+						else href+="&"
+						href+=set_string
+						this.href=href
+					}
+			   });
+		},
+
+		init:function() 
 		{ 
-		//	alert(err); 
+			connected=false;
+			original_title=document.title
+			this.change_urls(this);
+			//setInterval(this.change_urls(this),1000);
+
+			try 
+			{ 
+				this.connect();
+				this.send_url(top.location.href);
+				//setTimeout(this.send_url(top.location.href),2000)
+				that=this
+				socket.on('disconnect', function(){connected=false;that.connect(); that.set_status("recvd disconnect, attempting reconnect");});
+			} 
+			catch (err) 
+			{ 
+				alert(err); 
+			} 
 		} 
-	}; 
-	change_urls();
+	}
 }();
 
-	jQuery(document).ready(function() { 
-		shim.init(); 
-	}); 
+jQuery(document).ready(function() { 
+	shim.init(); 
+}); 
 
 </script>
