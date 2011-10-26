@@ -281,7 +281,17 @@ function handle_attach(req,res)
 
 load_config = function()
 {
-	config_text = fs.readFileSync('config.json','utf8')
+	CONFIG={}
+	try
+	{
+		config_text = fs.readFileSync('config.json','utf8')
+	}
+	catch(e)
+	{
+		console.log("CONFIG: no config file.")
+		return;
+	}
+
 	if (!config_text || config_text.length==0)
 	{
 		console.log("CONFIG: no config file.")
@@ -351,7 +361,7 @@ server = http.createServer(function (req, res)
 	}
 	else
 	{
-//		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
+		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
   	var proxy = new httpProxy.HttpProxy();
 		if (res.statusCode>=300 && res.statusCode<400)
 		{
