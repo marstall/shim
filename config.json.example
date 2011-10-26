@@ -1,0 +1,12 @@
+{
+	"config":
+	{
+		"slideshow":
+		{
+		"interval":"10000",
+		"path_base":"http://www.boston.com",
+		"paths":["news","sports","ae"]
+		},
+		"excluded_cookies":{"random_cookie_name":true}
+	}
+}
