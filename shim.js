@@ -281,7 +281,7 @@ function handle_attach(req,res)
 
 load_config = function()
 {
-	CONFIG={}
+	CONFIG=null
 	try
 	{
 		config_text = fs.readFileSync('config.json','utf8')
@@ -306,7 +306,7 @@ load_config = function()
 }
 
 initialize_slideshow = function() {
-	if (!CONFIG.slideshow) return
+	if (!CONFIG || CONFIG.slideshow) return
 	setInterval(function(){
 		console.log("slideshow set to "+slideshow_index+"/"+CONFIG.slideshow.paths[slideshow_index])
 		Path = CONFIG.slideshow.path_base+"/"+CONFIG.slideshow.paths[slideshow_index]+"?"+set_string
@@ -361,7 +361,7 @@ server = http.createServer(function (req, res)
 	}
 	else
 	{
-		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
+//		console.log (" %%%%%%%%%%%%%% no shim "+req.url)
   	var proxy = new httpProxy.HttpProxy();
 		if (res.statusCode>=300 && res.statusCode<400)
 		{
@@ -405,7 +405,7 @@ function handle_cookies(host,req)
 		if (x.length>1)
 		{
 			name = x[0].trim();
-			if (CONFIG.excluded_cookies[name]!=null) next;
+			if (CONFIG && (CONFIG.excluded_cookies[name]!=null)) next;
 			value = x[1].trim();
 			if (value.length>0) existing_cookies[name]=value
 //			console.log("new cookie:"+name+":"+value)

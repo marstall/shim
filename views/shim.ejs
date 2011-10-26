@@ -134,11 +134,20 @@ shim = function()
 			   });
 		},
 
+		disable_refresh:function(context)
+		{
+			// disable any <meta http-equiv="Refresh" content="900;url=?refresh=true">
+			if (!context) context=this
+			refresh_meta = jQuery("a[http_equiv=Refresh]")
+			alert(refresh_meta).attr("content")
+		}
+
 		init:function() 
 		{ 
 			connected=false;
 			original_title=document.title
 			this.change_urls(this);
+			this.disable_refresh(this)
 			//setInterval(this.change_urls(this),1000);
 
 			try 
