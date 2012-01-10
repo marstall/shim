@@ -16,7 +16,7 @@ There have been a few requests to use the tool, so we're open sourcing it for al
 Shim was written in 2011 by Chris Marstall, Creative Technologist at the Boston Globe.
 
 REQUIREMENTS
-* Shim must be installed on a 10.6+ Mac with both wired *and* wireless network interfaces (for example, a newer stock MacBook). The wired interface will be used to communicate with the internet; the wireless interface will be used to serve pages to devices.
+* Shim must be installed on a 10.6 Mac with both wired *and* wireless network interfaces (for example, a newer stock MacBook). The wired interface will be used to communicate with the internet; the wireless interface will be used to serve pages to devices. Shim doesn't yet work on OS X Lion (10.7).
 
 INSTALLING SHIM
 1 download and install the OS X NodeJS package: http://sites.google.com/site/nodejsmacosx
