@@ -63,3 +63,18 @@ Shim will work without a config file. However, if you want to add a slideshow or
 AFTER A SYSTEM RESTART
 run ./configure_proxy.sh
 
+UNINSTALLING SHIM
+
+To uninstall Shim, do the following
+
+$ sudo vi /etc/sysctl.conf
+	# remove the following lines from the file:
+	net.inet.ip.forwarding=1
+	net.inet.ip.fastforwarding=1
+	net.inet.ip.fw.enable=1
+	net.inet.ip.fw.verbose=1
+	net.inet.ip.scopedroute=0
+
+$ sudo ipfw delete 02000 
+
+# then, restart - all network configurations should be reversed now. you may also wish to uninstall node.js, NPM, and the NPM packages installed in setup.sh
