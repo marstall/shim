@@ -14,4 +14,10 @@ sudo cp /etc/sysctl.conf __sysctl.conf
 sudo cat _sysctl.conf>>__sysctl.conf
 sudo cp __sysctl.conf /etc/sysctl.conf
 
+ echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC \
+ "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist \
+ version="1.0"><dict><key>Kernel \
+ Flags</key><string>net.inet.ip.scopedroute=0</string></dict></plist>' > /Library/Preferences/SystemConfiguration/com.apple.Boot.plist
+
 ./configure_proxy.sh
+

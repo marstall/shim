@@ -20,7 +20,7 @@ REQUIREMENTS
 
 INSTALLING SHIM
 1 download and install the OS X NodeJS package: http://sites.google.com/site/nodejsmacosx
-2 git clone git@github.com:marstall/shim.git
+2 git clone git://github.com/marstall/shim.git
 3 cd shim
 4 sudo ./setup.sh
 5 Under Control Panel/Sharing, turn on Internet Sharing (select "Share your connection from [Ethernet] To Computers using [Airport]")

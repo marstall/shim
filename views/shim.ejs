@@ -136,11 +136,13 @@ shim = function()
 
 		disable_refresh:function(context)
 		{
-			// disable any <meta http-equiv="Refresh" content="900;url=?refresh=true">
+			// disable any meta-refresh. 
+			// ex: change <meta http-equiv="Refresh" content="900;url=?refresh=true"> to <meta http-equiv="Refresh" content="">
 			if (!context) context=this
-			refresh_meta = jQuery("a[http_equiv=Refresh]")
-			alert(refresh_meta).attr("content")
-		}
+			refresh_meta = jQuery("meta[http-equiv='Refresh']")
+			content = refresh_meta.attr('content')
+			refresh_meta.attr('content','')
+		},
 
 		init:function() 
 		{ 
